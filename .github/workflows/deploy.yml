@@ -1,6 +1,5 @@
 ## ⭐ Distinction-level CI/CD Workflow
 
-```yaml
 name: Deploy Django to EC2
 
 on:
