@@ -1,44 +1,45 @@
+## ⭐ Distinction-level CI/CD Workflow
+
+```yaml
 name: Deploy Django to EC2
 
 on:
-push:
-branches: [ main ]
+  push:
+    branches: [ main ]
 
 jobs:
-deploy:
-runs-on: ubuntu-latest
+  deploy:
+    runs-on: ubuntu-latest
 
-```
-steps:
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
 
-- name: Checkout code
-  uses: actions/checkout@v4
+      - name: Copy project to EC2
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ec2-user
+          key: ${{ secrets.EC2_KEY }}
+          source: "."
+          target: "~/pfm-financial-system"
 
-- name: Copy project to EC2
-  uses: appleboy/scp-action@v0.1.7
-  with:
-    host: ${{ secrets.EC2_HOST }}
-    username: ec2-user
-    key: ${{ secrets.EC2_KEY }}
-    source: "."
-    target: "~/pfm-financial-system"
+      - name: Deploy on EC2
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ec2-user
+          key: ${{ secrets.EC2_KEY }}
+          script: |
+            cd ~/pfm-financial-system
 
-- name: Deploy on EC2
-  uses: appleboy/ssh-action@v1.0.3
-  with:
-    host: ${{ secrets.EC2_HOST }}
-    username: ec2-user
-    key: ${{ secrets.EC2_KEY }}
-    script: |
-      cd ~/pfm-financial-system
+            python3 -m venv venv
+            source venv/bin/activate
 
-      python3 -m venv venv
-      source venv/bin/activate
+            pip install --upgrade pip
+            pip install -r requirements.txt || pip install django gunicorn
 
-      pip install -r requirements.txt || pip install django gunicorn
+            python manage.py migrate
+            python manage.py collectstatic --noinput
 
-      python manage.py migrate
-      python manage.py collectstatic --noinput
-
-      sudo systemctl restart pfm
-```
+            sudo systemctl restart pfm
