@@ -1,5 +1,7 @@
 <h2>Add Transaction</h2>
 
+<p><strong>Currency:</strong> EUR only</p>
+
 <form method="post" enctype="multipart/form-data">
     {% csrf_token %}
     {{ form.as_p }}

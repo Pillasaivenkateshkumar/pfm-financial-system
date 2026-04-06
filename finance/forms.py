@@ -17,4 +17,12 @@ class TransactionForm(ModelForm):
 
     class Meta:
         model = Transaction
-        fields = ['title', 'currency', 'amount', 'type', 'category', 'date', 'receipt']
+        fields = ['title', 'amount', 'type', 'category', 'date', 'receipt']
+
+    def save(self, commit=True):
+        transaction = super().save(commit=False)
+        transaction.currency = 'EUR'
+        if commit:
+            transaction.save()
+            self.save_m2m()
+        return transaction

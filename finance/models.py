@@ -35,7 +35,7 @@ class Transaction(models.Model):
     currency = models.CharField(
         max_length=3,
         choices=CURRENCY_CHOICES,
-        default='INR'
+        default='EUR'
     )
 
     type = models.CharField(
