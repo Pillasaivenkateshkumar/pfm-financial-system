@@ -10,7 +10,7 @@ flowchart LR
     Lib --> SSM["AWS Systems Manager Parameter Store"]
     Lib --> CW["Amazon CloudWatch"]
     Lib --> SNS["Amazon SNS"]
-    Lib --> SES["Amazon SES"]
+    Lib --> SQS["Amazon SQS"]
     Lib --> S3["Amazon S3"]
     GitHub["GitHub Actions"] --> App
 ```
@@ -26,7 +26,7 @@ flowchart LR
 - Amazon EC2: application hosting target for deployment
 - Amazon S3: stores transaction audit payloads generated after saves
 - Amazon SNS: publishes high-expense alerts
-- Amazon SES: sends transaction notification emails
+- Amazon SQS: stores transaction event messages for asynchronous processing evidence
 - Amazon CloudWatch: records custom metrics for transaction activity
 - AWS Systems Manager Parameter Store: provides runtime configuration such as the alert threshold
 - PostgreSQL or RDS-style settings: enabled through environment variables for cloud database migration

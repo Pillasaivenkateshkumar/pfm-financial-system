@@ -19,7 +19,7 @@
 
 ## Changes made to move the project toward the brief
 - Added `cloud_finance_lib`, a reusable object-oriented Python package for AWS service integrations
-- Integrated programmatic support for S3, SNS, SES, CloudWatch, and Systems Manager Parameter Store
+- Integrated programmatic support for S3, SNS, SQS, CloudWatch, and Systems Manager Parameter Store
 - Switched Django settings to environment-based configuration for security and deployment flexibility
 - Added optional PostgreSQL configuration so the app can target a managed cloud database
 - Split CI and CD into separate GitHub Actions jobs
@@ -38,5 +38,5 @@
 - Requirements section: describe transaction management, receipt storage, public demo mode, monitoring, alerts, notifications, secure config, CI/CD
 - Architecture section: describe Django app plus AWS services and GitHub Actions pipeline
 - Library section: explain `cloud_finance_lib` and include usage snippets from `finance/views.py`
-- Cloud services section: critically analyze EC2, S3, SNS, SES, CloudWatch, SSM, and optional RDS
+- Cloud services section: critically analyze EC2, S3, SNS, SQS, CloudWatch, SSM, and optional RDS
 - CI/CD section: explain separated CI and CD jobs and deployment gating

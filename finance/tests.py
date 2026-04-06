@@ -56,7 +56,7 @@ class CloudFinancialPlatformTests(TestCase):
         }
         s3_client = MagicMock()
         sns_client = MagicMock()
-        ses_client = MagicMock()
+        sqs_client = MagicMock()
         cloudwatch_client = MagicMock()
 
         def client_factory(service_name):
@@ -64,7 +64,7 @@ class CloudFinancialPlatformTests(TestCase):
                 "ssm": ssm_client,
                 "s3": s3_client,
                 "sns": sns_client,
-                "ses": ses_client,
+                "sqs": sqs_client,
                 "cloudwatch": cloudwatch_client,
             }[service_name]
 
@@ -75,8 +75,7 @@ class CloudFinancialPlatformTests(TestCase):
                 enabled=True,
                 audit_bucket="audit-bucket",
                 sns_topic_arn="arn:aws:sns:eu-west-1:123456789012:pfm-alerts",
-                ses_from_email="noreply@example.com",
-                ses_to_email="owner@example.com",
+                sqs_queue_url="https://sqs.eu-west-1.amazonaws.com/123456789012/pfm-events",
                 ssm_parameter_name="/pfm/runtime-config",
             ),
             session=session,
@@ -87,10 +86,10 @@ class CloudFinancialPlatformTests(TestCase):
         self.assertTrue(result["archived_to_s3"])
         self.assertTrue(result["metrics_published"])
         self.assertTrue(result["sns_alert_sent"])
-        self.assertTrue(result["ses_email_sent"])
+        self.assertTrue(result["sqs_event_sent"])
         s3_client.put_object.assert_called_once()
         sns_client.publish.assert_called_once()
-        ses_client.send_email.assert_called_once()
+        sqs_client.send_message.assert_called_once()
         cloudwatch_client.put_metric_data.assert_called_once()
 
     @patch("cloud_finance_lib.services.boto3.session.Session")
@@ -109,4 +108,4 @@ class CloudFinancialPlatformTests(TestCase):
         self.assertFalse(result["archived_to_s3"])
         self.assertFalse(result["metrics_published"])
         self.assertFalse(result["sns_alert_sent"])
-        self.assertFalse(result["ses_email_sent"])
+        self.assertFalse(result["sqs_event_sent"])

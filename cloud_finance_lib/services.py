@@ -17,8 +17,7 @@ class CloudFeatureSettings:
     aws_region: str = "eu-west-1"
     audit_bucket: str = ""
     sns_topic_arn: str = ""
-    ses_from_email: str = ""
-    ses_to_email: str = ""
+    sqs_queue_url: str = ""
     cloudwatch_namespace: str = "PFM/Application"
     ssm_parameter_name: str = ""
     expense_alert_threshold: Decimal = Decimal("500.00")
@@ -31,8 +30,7 @@ class CloudFeatureSettings:
             aws_region=os.getenv("AWS_REGION", "eu-west-1"),
             audit_bucket=os.getenv("AWS_S3_AUDIT_BUCKET", ""),
             sns_topic_arn=os.getenv("AWS_SNS_TOPIC_ARN", ""),
-            ses_from_email=os.getenv("AWS_SES_FROM_EMAIL", ""),
-            ses_to_email=os.getenv("AWS_FINANCE_ALERT_EMAIL", ""),
+            sqs_queue_url=os.getenv("AWS_SQS_QUEUE_URL", ""),
             cloudwatch_namespace=os.getenv("AWS_CLOUDWATCH_NAMESPACE", "PFM/Application"),
             ssm_parameter_name=os.getenv("AWS_CONFIG_PARAMETER_NAME", ""),
             expense_alert_threshold=Decimal(str(threshold)),
@@ -169,34 +167,22 @@ class CloudFinancialPlatform:
             logger.warning("SNS alert failed: %s", exc)
             return False
 
-    def send_email_notification(self, snapshot):
+    def enqueue_transaction_event(self, snapshot):
         if not self.settings.enabled:
             return False
-        if not self.settings.ses_from_email or not self.settings.ses_to_email:
+        if not self.settings.sqs_queue_url:
             return False
 
-        subject = "PFM transaction notification"
-        body = (
-            f"Transaction saved:\n\n"
-            f"Title: {snapshot.title}\n"
-            f"Amount: {snapshot.amount} {snapshot.currency}\n"
-            f"Type: {snapshot.type}\n"
-            f"Category: {snapshot.category}\n"
-            f"Date: {snapshot.transaction_date.isoformat()}\n"
-        )
-
         try:
-            self._client("ses").send_email(
-                Source=self.settings.ses_from_email,
-                Destination={"ToAddresses": [self.settings.ses_to_email]},
-                Message={
-                    "Subject": {"Data": subject},
-                    "Body": {"Text": {"Data": body}},
-                },
+            payload = snapshot.to_dict()
+            payload["event"] = "transaction.saved"
+            self._client("sqs").send_message(
+                QueueUrl=self.settings.sqs_queue_url,
+                MessageBody=json.dumps(payload),
             )
             return True
         except Exception as exc:
-            logger.warning("SES notification failed: %s", exc)
+            logger.warning("SQS enqueue failed: %s", exc)
             return False
 
     def process_transaction(self, snapshot):
@@ -206,5 +192,5 @@ class CloudFinancialPlatform:
             "archived_to_s3": self.archive_transaction(snapshot),
             "metrics_published": self.publish_metrics(snapshot),
             "sns_alert_sent": self.publish_expense_alert(snapshot),
-            "ses_email_sent": self.send_email_notification(snapshot),
+            "sqs_event_sent": self.enqueue_transaction_event(snapshot),
         }

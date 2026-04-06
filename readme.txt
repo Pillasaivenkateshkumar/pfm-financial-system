@@ -43,7 +43,7 @@ Cloud services currently supported in code
 - Amazon EC2: deployment target in GitHub Actions CD job
 - Amazon S3: transaction audit archive storage
 - Amazon SNS: high-expense alerts
-- Amazon SES: transaction email notifications
+- Amazon SQS: transaction event queue for downstream processing
 - Amazon CloudWatch: custom application metrics
 - AWS Systems Manager Parameter Store: runtime threshold configuration
 - PostgreSQL or Amazon RDS style database settings: supported through environment variables
