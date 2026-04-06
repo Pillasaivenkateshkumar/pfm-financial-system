@@ -1,9 +1,16 @@
+import logging
+
 from django.shortcuts import render, redirect
 from django.contrib.auth.models import User
 from django.contrib.auth.forms import UserCreationForm
 from .models import Transaction
 from .forms import TransactionForm
+from cloud_finance_lib import CloudFinancialPlatform, TransactionSnapshot
 from finance_utils.calculations import total_income, total_expense, balance
+
+
+logger = logging.getLogger(__name__)
+
 
 def home(request):
     return render(request, 'finance/home.html')
@@ -71,6 +78,7 @@ def add_transaction(request):
             trans = form.save(commit=False)
             trans.user = current_user
             trans.save()
+            sync_transaction_to_cloud(trans)
             return redirect('dashboard')
     else:
         form = TransactionForm()
@@ -87,7 +95,8 @@ def edit_transaction(request, pk):
     if request.method == 'POST':
         form = TransactionForm(request.POST, request.FILES, instance=transaction)
         if form.is_valid():
-            form.save()
+            updated_transaction = form.save()
+            sync_transaction_to_cloud(updated_transaction)
             return redirect('dashboard')
     else:
         form = TransactionForm(instance=transaction)
@@ -107,3 +116,22 @@ def delete_transaction(request, pk):
         return redirect('dashboard')
 
     return render(request, 'finance/delete_confirm.html', {'transaction': transaction})
+
+
+def sync_transaction_to_cloud(transaction):
+    snapshot = TransactionSnapshot(
+        transaction_id=transaction.id,
+        user_id=transaction.user_id,
+        title=transaction.title,
+        amount=transaction.amount,
+        currency=transaction.currency,
+        type=transaction.type,
+        category=transaction.category,
+        transaction_date=transaction.date,
+        receipt_name=transaction.receipt.name if transaction.receipt else "",
+    )
+
+    try:
+        CloudFinancialPlatform().process_transaction(snapshot)
+    except Exception as exc:
+        logger.warning("Cloud sync skipped: %s", exc)
