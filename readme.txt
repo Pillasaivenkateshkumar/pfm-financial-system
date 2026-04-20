@@ -42,6 +42,7 @@ Tests and checks
 Cloud services currently supported in code
 - Amazon EC2: deployment target in GitHub Actions CD job
 - Amazon S3: transaction audit archive storage
+- Amazon S3: optional receipt file storage via Django media backend
 - Amazon SNS: high-expense alerts
 - Amazon SQS: transaction event queue for downstream processing
 - Amazon CloudWatch: custom application metrics
@@ -52,6 +53,7 @@ Deployment notes
 - GitHub Actions workflow: .github/workflows/deploy.yml
 - CI runs migrations and tests on pull requests and pushes to main
 - CD deploys to EC2 only after CI passes on main
+- To store new receipt uploads in S3, install `django-storages`, set `USE_S3_MEDIA_STORAGE=True`, and provide `AWS_S3_MEDIA_BUCKET`
 
 Library packaging
 - The reusable library package is cloud_finance_lib
